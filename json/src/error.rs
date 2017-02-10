@@ -11,15 +11,13 @@ use serde::ser;
 /// This type represents all possible errors that can occur when serializing or
 /// deserializing JSON data.
 pub struct Error {
-#[doc(hidden)]
-    pub err: Box<ErrorImpl>,
+    err: Box<ErrorImpl>,
 }
 
 /// Alias for a `Result` with the error type `serde_json::Error`.
 pub type Result<T> = result::Result<T, Error>;
 
-#[doc(hidden)]
-pub enum ErrorImpl {
+enum ErrorImpl {
     /// The JSON value had some syntatic error.
     Syntax(ErrorCode, usize, usize),
 
@@ -107,6 +105,15 @@ impl Error {
             f(code)
         } else {
             self
+        }
+    }
+
+    /// Extract the syntax error, if present
+    pub fn syntax_error(&self) -> Option<(ErrorCode, usize, usize)> {
+        let error_impl = self.err.as_ref();
+        match error_impl {
+            &ErrorImpl::Syntax(ref ec, line, col) => Some((ec.clone(), line, col)),
+            _ => None
         }
     }
 }
